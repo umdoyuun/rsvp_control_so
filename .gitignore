@@ -19,6 +19,7 @@
 test_7segment
 test_*
 example
+example*
 a.out
 
 # 디버그 파일
