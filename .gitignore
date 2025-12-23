@@ -1,0 +1,93 @@
+# 컴파일된 Object 파일
+*.o
+*.obj
+*.ko
+*.elf
+
+# 동적/정적 라이브러리
+*.so
+*.so.*
+*.a
+*.lib
+*.dll
+*.dylib
+
+# 실행 파일
+*.exe
+*.out
+*.app
+test_7segment
+test_*
+example
+a.out
+
+# 디버그 파일
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# 커널 모듈 컴파일 결과
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dts.dts
+
+# 에디터/IDE 관련
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.bak
+
+# 빌드 디렉토리
+build/
+dist/
+bin/
+obj/
+out/
+
+# CMake 관련
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+
+# Python 관련 (있을 경우)
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+venv/
+env/
+
+# 로그 파일
+*.log
+
+# 압축 파일 (필요시 제외)
+*.zip
+*.tar.gz
+*.rar
+
+# 임시 파일
+*.tmp
+*.temp
+
+# 코어 덤프
+core
+core.*
+
+# Raspberry Pi 특화
+*.img
+*.iso
+
+# 기타
+.gdb_history
+tags
+TAGS
