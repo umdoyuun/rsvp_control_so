@@ -20,6 +20,7 @@ test_7segment
 test_*
 example
 example*
+server
 a.out
 
 # 디버그 파일
