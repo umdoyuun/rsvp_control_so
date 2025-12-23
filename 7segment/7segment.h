@@ -13,12 +13,6 @@ typedef struct {
     int pin_d;
 } Seg7Pins;
 
-// 주의: 사용 전에 wiringPiSetup() 또는 wiringPiSetupGpio()를 먼저 호출해야 함!
-// 예:
-//   wiringPiSetupGpio();
-//   Seg7Pins pins = {14, 15, 18, 23};
-//   seg7_init(&pins);
-
 int seg7_init(const Seg7Pins* pins);
 
 int seg7_setnum(int num);
