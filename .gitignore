@@ -21,6 +21,7 @@ test_*
 example
 example*
 server
+client
 a.out
 
 # 디버그 파일
