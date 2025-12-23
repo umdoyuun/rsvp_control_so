@@ -213,10 +213,3 @@ sudo make uninstall
 make clean
 ```
 
-## 라이선스
-
-MIT License
-
-## 작성자
-
-Created for Raspberry Pi embedded systems development
