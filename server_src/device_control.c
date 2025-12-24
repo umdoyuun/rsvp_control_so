@@ -14,9 +14,9 @@ void countdown_complete_callback(void) {
         g_state->segment_counting = false;
         printf("[Device] Countdown completed - Playing school bell music\n");
         pthread_mutex_unlock(&g_state->state_mutex);
-        
-        // 학교종 음악 재생
-        play_music(MUSIC_SCHOOL_BELL);
+
+        // 비동기 재생
+        play_music_async(MUSIC_SCHOOL_BELL);
     }
 }
 
@@ -73,42 +73,46 @@ static void process_buzzer_on(ServerState* state, Command* cmd, CommandResponse*
     if (music_num < MUSIC_SCHOOL_BELL || music_num > MUSIC_BUTTERFLY) {
         music_num = MUSIC_SCHOOL_BELL;
     }
-    
-    pthread_mutex_lock(&state->state_mutex);
-    state->buzzer_playing = true;
-    pthread_mutex_unlock(&state->state_mutex);
-    
-    // 먼저 응답 보내기
-    response->status = 0;
-    sprintf(response->message, "Playing music %d", music_num);
-    
-    // 응답 전달
-    pthread_mutex_lock(&state->queue_mutex);
-    memcpy(&state->response, response, sizeof(CommandResponse));
-    pthread_cond_signal(&state->response_ready);
-    pthread_mutex_unlock(&state->queue_mutex);
-    
-    // 음악 재생 (블로킹)
-    printf("[Device] Playing music %d...\n", music_num);
-    play_music(music_num);
-    
-    pthread_mutex_lock(&state->state_mutex);
-    state->buzzer_playing = false;
-    pthread_mutex_unlock(&state->state_mutex);
-    
-    printf("[Device] Music playback completed\n");
-    
-    // 이미 응답을 보냈으므로 여기서는 아무것도 하지 않음
-    response->status = -2; // 특수 플래그: 이미 응답 보냄
+
+    if (is_music_playing()) {
+        response->status = -1;
+        strcpy(response->message, "Music already playing");
+        return;
+    }
+
+    if (play_music_async(music_num) == 0) {
+        pthread_mutex_lock(&state->state_mutex);
+        state->buzzer_playing = true;
+        pthread_mutex_unlock(&state->state_mutex);
+
+        response->status = 0;
+        sprintf(response->message, "Playing music %d", music_num);
+        printf("[Device] Music %d started\n", music_num);
+    } else {
+        response->status = -1;
+        strcpy(response->message, "Failed to start music");
+    }
 }
 
 static void process_buzzer_off(ServerState* state, CommandResponse* response) {
-    pthread_mutex_lock(&state->state_mutex);
-    state->buzzer_playing = false;
-    pthread_mutex_unlock(&state->state_mutex);
-    
-    response->status = 0;
-    strcpy(response->message, "Buzzer stopped");
+    if (!is_music_playing()) {
+        response->status = -1;
+        strcpy(response->message, "No music playing");
+        return;
+    }
+
+    if (stop_music() == 0) {
+        pthread_mutex_lock(&state->state_mutex);
+        state->buzzer_playing = false;
+        pthread_mutex_unlock(&state->state_mutex);
+
+        response->status = 0;
+        strcpy(response->message, "Music stopped");
+        printf("[Device] Music stopped\n");
+    } else {
+        response->status = -1;
+        strcpy(response->message, "Failed to stop music");
+    }
 }
 
 static void process_sensor_on(ServerState* state, CommandResponse* response) {
