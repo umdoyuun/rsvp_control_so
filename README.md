@@ -143,7 +143,7 @@ rsvp_control_so/
 
 | 디바이스 | GPIO 핀 | 기능 |
 |---------|---------|------|
-| LED | 24 | PWM 밝기 조절 (3단계) |
+| LED | 12 | PWM 밝기 조절 (3단계) |
 | Buzzer | 21 | 멜로디 재생 (4곡) |
 | Light Sensor | 11 | 밝기 감지 |
 | 7-Segment (A) | 14 | 카운트다운 표시 |
@@ -164,7 +164,9 @@ rsvp_control_so/
   - 2: 반짝반짝 작은별 (Twinkle Star)
   - 3: 생일 축하 (Happy Birthday)
   - 4: 나비야 (Butterfly)
-- 비동기 재생 (재생 중 다른 명령 가능)
+- **비동기 재생**: 음악 재생 중에도 다른 명령 처리 가능
+- **중단 기능**: 재생 중인 음악을 즉시 정지 (BUZZER OFF)
+- **상태 확인**: 현재 재생 중인지 실시간 확인
 
 **3. Light Sensor (light_sensor/liblight_sensor.so)**
 - 실시간 밝기 감지
@@ -452,9 +454,28 @@ Enter music number (1:School Bell, 2:Twinkle Star, 3:Happy Birthday, 4:Butterfly
 
 **서버 로그:**
 ```
-[Device] Playing music 1...
-[Device] Music playback completed
+[Device] Music 1 started
+[Buzzer] Music playback started
+(음악 재생 중에도 다른 명령 처리 가능)
+[Buzzer] Music playback completed normally
 ```
+
+#### 음악 정지
+```
+Select: 5
+[SUCCESS] Music stopped
+```
+
+**서버 로그:**
+```
+[Device] Music stopped
+[Buzzer] Music playback stopped
+```
+
+**특징:**
+- 음악이 재생되는 동안에도 LED 제어, 센서 감시 등 다른 작업 가능
+- 음악 재생 중 BUZZER OFF 명령으로 즉시 중단 가능
+- 이미 재생 중일 때는 새로운 음악 재생 불가
 
 ### 3. 조도센서 자동 제어
 
