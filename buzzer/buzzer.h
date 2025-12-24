@@ -8,6 +8,8 @@
 
 int music_init(int speaker_pin);
 void music_cleanup(void);
-int play_music(int music_number);
+int play_music_async(int music_number);
+int stop_music(void);
+int is_music_playing(void);
 
 #endif
