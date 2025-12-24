@@ -57,9 +57,30 @@ void* communication_thread(void* arg) {
     
     printf("[Comm Thread] Started for client socket %d\n", client_socket);
     
-    // 환영 메시지
-    const char* welcome = "Connected to IoT Device Control Server\n";
-    send(client_socket, welcome, strlen(welcome), 0);
+    // 환영 메시지 + 웹 서버 URL (버퍼 크기 증가)
+    char welcome_msg[2048];  // 1024 -> 2048로 증가
+    char url[128];
+    
+    // URL 먼저 생성
+    snprintf(url, sizeof(url), "http://%s:%d", state->server_ip, WEB_SERVER_PORT);
+    
+    // 환영 메시지 생성
+    snprintf(welcome_msg, sizeof(welcome_msg),
+        "\n"
+        "╔════════════════════════════════════════════════════════╗\n"
+        "║                                                        ║\n"
+        "║     Connected to IoT Device Control Server            ║\n"
+        "║                                                        ║\n"
+        "╠════════════════════════════════════════════════════════╣\n"
+        "║                                                        ║\n"
+        "║  📺 Camera Monitor:                                   ║\n"
+        "║     %-48s ║\n"
+        "║                                                        ║\n"
+        "╚════════════════════════════════════════════════════════╝\n"
+        "\n",
+        url);
+    
+    send(client_socket, welcome_msg, strlen(welcome_msg), 0);
     
     char buffer[BUFFER_SIZE];
     
