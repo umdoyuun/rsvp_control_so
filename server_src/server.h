@@ -14,6 +14,8 @@
 #define MAX_QUEUE_SIZE 100
 #define BUFFER_SIZE 1024
 #define WEB_SERVER_SCRIPT_PATH "./web_server/web_server.py"
+#define DAEMON_PID_FILE "/var/run/iot_server.pid"
+#define DAEMON_LOG_FILE "/var/log/iot_server.log"
 
 // 명령 타입
 typedef enum {
@@ -98,6 +100,12 @@ void* device_control_thread(void* arg);
 pid_t start_web_server(int port);
 void stop_web_server(pid_t pid);
 int get_server_ip(char* ip_buffer, size_t buffer_size);
+
+// 데몬 관련
+int daemonize(void);
+int write_pid_file(const char* pidfile);
+int remove_pid_file(const char* pidfile);
+void redirect_output_to_log(const char* logfile);
 
 // Command Queue 함수
 void queue_init(CommandQueue* queue);
