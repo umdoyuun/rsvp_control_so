@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <h1>📹 Camera Monitor</h1>
+            <p class="subtitle">실시간 Camera Feed</p>
+        </div>
+
+        <!-- 카메라 피드 -->
+        <div class="card">
+            <h2 class="card-title">Live Camera Feed</h2>
+            <div class="video-container">
+                <img src="{{ url_for('video') }}" alt="Live Stream" id="camera-feed">
+            </div>
+            <div class="camera-info">
+                <span class="status-dot"></span>
+                <span>Live Streaming</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
