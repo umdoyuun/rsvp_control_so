@@ -1,7 +1,6 @@
 #include "led.h"
 #include <stdio.h>
 #include <wiringPi.h>
-#include <softPwm.h>
 
 #define PWM_LOW     33
 #define PWM_MEDIUM  66
@@ -30,10 +29,11 @@ int led_init(const LedPin* led_pin) {
 
     LED_PIN = led_pin->pin;
 
-    if (softPwmCreate(LED_PIN, PWM_HIGH, PWM_RANGE) != 0) {
-        fprintf(stderr, "Failed to create software PWM\n");
-        return -1;
-    }
+	pinMode(LED_PIN, PWM_OUTPUT);
+	pwmSetMode(PWM_MODE_MS);
+	pwmSetRange(PWM_RANGE);
+	pwmSetClock(192);
+	pwmWrite(LED_PIN, PWM_HIGH);
 
     led_state = false;
     is_initialized = true;
@@ -49,7 +49,7 @@ int led_on(void) {
         return -1;
     }
 
-    softPwmWrite(LED_PIN, 0);
+    pwmWrite(LED_PIN, 0);
     led_state = true;
 
     return 0;
@@ -61,7 +61,7 @@ int led_off(void) {
         return -1;
     }
 
-    softPwmWrite(LED_PIN, PWM_HIGH);
+    pwmWrite(LED_PIN, PWM_HIGH);
     led_state = false;
 
     return 0;
@@ -90,7 +90,7 @@ int led_set_brightness(int brightness) {
             return -1;
     }
 
-    softPwmWrite(LED_PIN, pwm_value);
+    pwmWrite(LED_PIN, pwm_value);
     led_state = true;
 
     return 0;
@@ -105,7 +105,7 @@ void led_cleanup(void) {
         return;
     }
 
-    softPwmWrite(LED_PIN, PWM_HIGH);
+    pwmWrite(LED_PIN, PWM_HIGH);
     led_state = false;
     is_initialized = false;
 
