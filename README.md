@@ -15,7 +15,6 @@
 - [클라이언트 실행](#클라이언트-실행)
 - [사용 방법](#사용-방법)
 - [통신 프로토콜](#통신-프로토콜)
-- [트러블슈팅](#트러블슈팅)
 
 ---
 
@@ -124,7 +123,13 @@ rsvp_control_so/
 │   ├── communication.c           # 통신 스레드
 │   ├── device_control.c          # 디바이스 제어 스레드
 │   ├── command_queue.c           # 명령 큐 관리
-│   └── Makefile
+│   ├── Makefile
+|   └── web_server/               # 실시간 카메라 스트리밍 웹 서버
+│       ├── web_server.py         # 웹 서버
+│       ├── templates/
+|       |    └── index.html    
+│       └── static/
+|            └── style.css
 │
 ├── client/                       # 소켓 클라이언트
 │   ├── main.c                    # 클라이언트 메인
@@ -557,75 +562,6 @@ Disconnected from server
 | 7 | Sensor OFF | - | - | liblight_sensor.so |
 | 8 | Segment Display | 1-9 | - | lib7segment.so |
 | 9 | Segment Stop | - | - | lib7segment.so |
-
----
-
-## 트러블슈팅
-
-### 빌드 문제
-
-#### Q1. "wiringPi.h: No such file or directory"
-```bash
-# wiringPi 재설치
-sudo apt-get install --reinstall wiringpi
-```
-
-#### Q2. "cannot find -lled"
-```bash
-# 서버 디렉토리에서 라이브러리 링크 확인
-cd server
-ls -l *.so
-
-# 없으면 링크 생성
-ln -sf ../led/libled.so .
-ln -sf ../buzzer/libbuzzer.so .
-ln -sf ../light_sensor/liblight_sensor.so .
-ln -sf ../7segment/lib7segment.so .
-```
-
-### 서버 실행 문제
-
-#### Q1. "error while loading shared libraries"
-```bash
-# 라이브러리 경로 설정
-cd server
-export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
-sudo -E ./server
-
-# 또는
-LD_LIBRARY_PATH=. sudo ./server
-```
-
-#### Q2. "bind: Address already in use"
-```bash
-# 포트 사용 프로세스 확인
-sudo netstat -tulpn | grep 8080
-
-# 기존 서버 종료
-sudo killall server
-```
-
-#### Q3. 디바이스 초기화 실패
-```bash
-# GPIO 상태 확인
-gpio readall
-
-# 하드웨어 연결 확인
-```
-
-### 클라이언트 문제
-
-#### Q1. "Connection refused"
-```bash
-# 서버 실행 여부 확인
-ps aux | grep server
-
-# 네트워크 연결 확인
-ping 192.168.0.100
-
-# 방화벽 확인
-sudo ufw allow 8080
-```
 
 ---
 
