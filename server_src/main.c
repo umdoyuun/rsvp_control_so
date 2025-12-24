@@ -31,10 +31,24 @@ int main(void) {
         return EXIT_FAILURE;
     }
     
+    // 웹 서버 시작
+    printf("\nStarting web camera server...\n");
+    g_server_state.web_server_pid = start_web_server(WEB_SERVER_PORT);
+    
+    if (g_server_state.web_server_pid < 0) {
+        fprintf(stderr, "Failed to start web server (continuing without camera)\n");
+    } else {
+        printf("✓ Camera server running at http://%s:%d\n\n", 
+               g_server_state.server_ip, WEB_SERVER_PORT);
+    }
+    
     // Device Control Thread 생성
     if (pthread_create(&g_server_state.device_thread, NULL, 
                        device_control_thread, &g_server_state) != 0) {
         fprintf(stderr, "Failed to create device control thread\n");
+        if (g_server_state.web_server_pid > 0) {
+            stop_web_server(g_server_state.web_server_pid);
+        }
         server_cleanup(&g_server_state);
         return EXIT_FAILURE;
     }
@@ -45,6 +59,11 @@ int main(void) {
         socklen_t client_len = sizeof(client_addr);
         
         printf("Waiting for client connection...\n");
+        if (g_server_state.web_server_pid > 0) {
+            printf("Camera Monitor: http://%s:%d\n", 
+                   g_server_state.server_ip, WEB_SERVER_PORT);
+        }
+        printf("\n");
         
         int client_socket = accept(g_server_state.server_socket, 
                                    (struct sockaddr*)&client_addr, 
@@ -100,7 +119,7 @@ int main(void) {
         // Communication Thread 종료 대기
         pthread_join(g_server_state.comm_thread, NULL);
         
-        printf("Client disconnected\n");
+        printf("Client disconnected\n\n");
     }
     
     // 서버 정리
