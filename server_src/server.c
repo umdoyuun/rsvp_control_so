@@ -10,16 +10,15 @@
 #include <wiringPi.h>
 #include "server.h"
 
-// GPIO 핀 설정 (제공된 코드 기준)
-static LedPin led_pin = {.pin = 24};                    // GPIO 24번
-static LightSensorPin sensor_pin = {.pin = 11};         // GPIO 11번
+static LedPin led_pin = {.pin = 12};
+static LightSensorPin sensor_pin = {.pin = 11}; 
 static Seg7Pins seg7_pins = {
-    .pin_a = 14,                                         // GPIO 14번
-    .pin_b = 15,                                         // GPIO 15번
-    .pin_c = 18,                                         // GPIO 18번
-    .pin_d = 23                                          // GPIO 23번
+    .pin_a = 14,
+    .pin_b = 15,
+    .pin_c = 18,
+    .pin_d = 23 
 };
-static const int buzzer_pin = 21;                        // GPIO 21번
+static const int buzzer_pin = 21;
 
 int server_init(ServerState* state) {
     memset(state, 0, sizeof(ServerState));
