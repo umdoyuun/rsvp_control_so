@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "server.h"
@@ -13,17 +14,77 @@ static ServerState g_server_state;
 static volatile sig_atomic_t g_running = 1;
 
 void signal_handler(int signum) {
-    printf("\nReceived signal %d, shutting down...\n", signum);
-    g_running = 0;
-    g_server_state.server_running = false;
+    if (signum == SIGINT) {
+        printf("\n[Signal] Received SIGINT (Ctrl+C), shutting down...\n");
+        g_running = 0;
+        g_server_state.server_running = false;
+    }
+}
+
+void sigchld_handler(int signum) {
+    (void)signum;
+    // 좀비 프로세스 방지 (웹 서버가 종료되었을 때)
+    while (waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+void setup_signal_handlers(void) {
+    struct sigaction sa_int, sa_chld, sa_ignore;
+    
+    // SIGINT (Ctrl+C) 핸들러 설정
+    memset(&sa_int, 0, sizeof(sa_int));
+    sa_int.sa_handler = signal_handler;
+    sigemptyset(&sa_int.sa_mask);
+    sa_int.sa_flags = 0;
+    
+    if (sigaction(SIGINT, &sa_int, NULL) == -1) {
+        perror("sigaction SIGINT");
+        exit(EXIT_FAILURE);
+    }
+    
+    // SIGCHLD 핸들러 설정 (자식 프로세스 종료 처리)
+    memset(&sa_chld, 0, sizeof(sa_chld));
+    sa_chld.sa_handler = sigchld_handler;
+    sigemptyset(&sa_chld.sa_mask);
+    sa_chld.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+    
+    if (sigaction(SIGCHLD, &sa_chld, NULL) == -1) {
+        perror("sigaction SIGCHLD");
+        exit(EXIT_FAILURE);
+    }
+    
+    // 다른 신호들은 무시
+    memset(&sa_ignore, 0, sizeof(sa_ignore));
+    sa_ignore.sa_handler = SIG_IGN;
+    sigemptyset(&sa_ignore.sa_mask);
+    sa_ignore.sa_flags = 0;
+    
+    // SIGTERM 무시 (kill 명령으로 종료 방지)
+    sigaction(SIGTERM, &sa_ignore, NULL);
+    
+    // SIGHUP 무시 (터미널 종료 시에도 계속 실행)
+    sigaction(SIGHUP, &sa_ignore, NULL);
+    
+    // SIGQUIT 무시 (Ctrl+\ 종료 방지)
+    sigaction(SIGQUIT, &sa_ignore, NULL);
+    
+    // SIGPIPE 무시 (소켓 끊김 시 종료 방지)
+    sigaction(SIGPIPE, &sa_ignore, NULL);
+    
+    printf("[Signal] Signal handlers configured:\n");
+    printf("  - SIGINT (Ctrl+C): Graceful shutdown\n");
+    printf("  - SIGTERM: Ignored\n");
+    printf("  - SIGHUP: Ignored\n");
+    printf("  - SIGQUIT: Ignored\n");
+    printf("  - SIGPIPE: Ignored\n");
+    printf("  - SIGCHLD: Zombie prevention\n");
+    printf("\n");
 }
 
 int main(void) {
-    // 시그널 핸들러 등록
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
+    printf("=== IoT Device Control Server ===\n\n");
     
-    printf("=== IoT Device Control Server ===\n");
+    // 신호 핸들러 설정
+    setup_signal_handlers();
     
     // 서버 초기화
     if (server_init(&g_server_state) != 0) {
@@ -32,7 +93,7 @@ int main(void) {
     }
     
     // 웹 서버 시작
-    printf("\nStarting web camera server...\n");
+    printf("Starting web camera server...\n");
     g_server_state.web_server_pid = start_web_server(WEB_SERVER_PORT);
     
     if (g_server_state.web_server_pid < 0) {
@@ -52,6 +113,11 @@ int main(void) {
         server_cleanup(&g_server_state);
         return EXIT_FAILURE;
     }
+    
+    printf("═══════════════════════════════════════════════\n");
+    printf("  Server is running. Press Ctrl+C to stop.\n");
+    printf("  Other signals (TERM, HUP, QUIT) are ignored.\n");
+    printf("═══════════════════════════════════════════════\n\n");
     
     // 클라이언트 연결 대기 및 처리
     while (g_running && g_server_state.server_running) {
@@ -73,6 +139,10 @@ int main(void) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 // 논블로킹 소켓: 연결 없음, 계속 대기
                 usleep(500000); // 500ms 대기
+                continue;
+            } else if (errno == EINTR) {
+                // 시그널 인터럽트 - 정상, 계속 진행
+                printf("[Info] accept() interrupted by signal, continuing...\n");
                 continue;
             } else if (g_running) {
                 perror("accept");
@@ -123,8 +193,9 @@ int main(void) {
     }
     
     // 서버 정리
+    printf("\n[Cleanup] Starting server cleanup...\n");
     server_cleanup(&g_server_state);
     
-    printf("Server stopped\n");
+    printf("[Cleanup] Server stopped successfully\n");
     return EXIT_SUCCESS;
 }
