@@ -3,14 +3,17 @@
 
 #include <pthread.h>
 #include <stdbool.h>
+#include <sys/types.h>
 #include "led.h"
 #include "buzzer.h"
 #include "light_sensor.h"
 #include "7segment.h"
 
 #define SERVER_PORT 8080
+#define WEB_SERVER_PORT 8000
 #define MAX_QUEUE_SIZE 100
 #define BUFFER_SIZE 1024
+#define WEB_SERVER_SCRIPT_PATH "./web_server/web_server.py"
 
 // 명령 타입
 typedef enum {
@@ -75,6 +78,10 @@ typedef struct {
     int client_socket;
     bool client_connected;
     
+    // 웹 서버
+    pid_t web_server_pid;
+    char server_ip[64];
+    
     // 스레드
     pthread_t comm_thread;
     pthread_t device_thread;
@@ -86,6 +93,11 @@ int server_init(ServerState* state);
 void server_cleanup(ServerState* state);
 void* communication_thread(void* arg);
 void* device_control_thread(void* arg);
+
+// 웹 서버 관련
+pid_t start_web_server(int port);
+void stop_web_server(pid_t pid);
+int get_server_ip(char* ip_buffer, size_t buffer_size);
 
 // Command Queue 함수
 void queue_init(CommandQueue* queue);
